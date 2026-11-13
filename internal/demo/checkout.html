@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Fieldwork · Checkout</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f4f1eb;
+        color: #26352e;
+        font: 16px system-ui;
+      }
+      header {
+        padding: 25px 6vw;
+        border-bottom: 1px solid #d9d7cd;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+      header span {
+        float: right;
+        font-weight: 400;
+        color: #677068;
+        letter-spacing: 0;
+      }
+      main {
+        max-width: 800px;
+        margin: 70px auto;
+        padding: 0 25px;
+      }
+      small {
+        color: #6b776f;
+      }
+      h1 {
+        font: 46px Georgia;
+        margin: 15px 0 35px;
+      }
+      .product {
+        display: flex;
+        gap: 25px;
+        border-bottom: 1px solid #d9d7cd;
+        padding-bottom: 30px;
+        margin-bottom: 30px;
+      }
+      .swatch {
+        width: 110px;
+        height: 110px;
+        background: #c6ceba;
+        display: grid;
+        place-items: center;
+        font: italic 45px Georgia;
+      }
+      .product h2 {
+        font-size: 20px;
+      }
+      .price {
+        margin-left: auto;
+      }
+      label {
+        display: block;
+        margin: 0 0 10px;
+        font-size: 14px;
+      }
+      input {
+        background: white;
+        border: 1px solid #a9b2a5;
+        padding: 14px;
+        font: inherit;
+        width: 60%;
+      }
+      button {
+        background: #2b4536;
+        color: white;
+        border: 0;
+        padding: 15px 25px;
+        font: inherit;
+        cursor: pointer;
+      }
+      #message {
+        min-height: 30px;
+        font-size: 14px;
+        color: #a14930;
+        margin: 12px 0 25px;
+      }
+      .total {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0;
+      }
+      footer {
+        margin-top: 40px;
+        font-size: 13px;
+        color: #677068;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid #c97d43;
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>FIELDWORK <span>Demo checkout</span></header>
+    <main>
+      <small>YOUR BAG / CHECKOUT</small>
+      <h1>A little room to grow.</h1>
+      <div class="product">
+        <div class="swatch">F.</div>
+        <div>
+          <h2>Everyday planter</h2>
+          <small>Sage · Medium · Qty 1</small>
+        </div>
+        <strong class="price">$48.00</strong>
+      </div>
+      <label for="coupon">Have a coupon?</label
+      ><input
+        id="coupon"
+        data-testid="coupon"
+        data-kipuray-public
+        placeholder="Try FIELD10"
+        value="FIELD10"
+      /><button data-testid="apply">Apply coupon</button>
+      <p id="message" role="status" data-testid="message"></p>
+      <div class="total"><span>Total</span><strong>$48.00</strong></div>
+      <button data-testid="checkout">Continue to payment</button>
+      <footer>Synthetic demo. No purchases or personal data.</footer>
+    </main>
+    <script>
+      const fixed = __FIXED__;
+      document
+        .querySelector('[data-testid="apply"]')
+        .addEventListener("click", async () => {
+          const response = await fetch(
+            "/api/coupon?code=" +
+              encodeURIComponent(document.querySelector("#coupon").value),
+          );
+          const data = await response.json();
+          if (fixed && (!response.ok || data.discount === null)) {
+            document.querySelector("#message").textContent = response.ok
+              ? "Coupon not valid"
+              : "Service unavailable. Try again.";
+            return;
+          }
+          document.querySelector("#message").textContent =
+            "Discount: " + data.discount.toFixed(2);
+        });
+    </script>
+  </body>
+</html>

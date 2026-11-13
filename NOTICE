@@ -1,0 +1,19 @@
+Kipuray
+Copyright 2026 Kipuray contributors
+
+This project uses open-source components including:
+
+- rrweb and rrweb-snapshot — MIT — https://github.com/rrweb-io/rrweb
+- chromedp and cdproto — MIT — https://github.com/chromedp/chromedp
+- React — MIT — https://github.com/facebook/react
+- modernc.org/sqlite — BSD-3-Clause — https://pkg.go.dev/modernc.org/sqlite
+- SQLite — public domain — https://www.sqlite.org/copyright.html
+- Lucide — ISC — https://github.com/lucide-icons/lucide
+- DM Sans and IBM Plex Mono — SIL Open Font License 1.1; license texts are
+  distributed with the corresponding @fontsource packages.
+
+The Go and npm lockfiles identify the exact dependency versions. Dependencies
+retain their original licenses; no endorsement by their authors is implied.
+
+Full dependency license texts are included in THIRD_PARTY_LICENSES.txt and embedded
+in the application at /THIRD_PARTY_LICENSES.txt.

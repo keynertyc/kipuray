@@ -1,0 +1,17 @@
+services:
+  kipuray:
+    build: .
+    ports:
+      - "127.0.0.1:4317:4317"
+    environment:
+      KIPURAY_TOKEN: "${KIPURAY_TOKEN:?Set KIPURAY_TOKEN to a random value of at least 32 characters}"
+    volumes:
+      - kipuray-data:/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  kipuray-data:

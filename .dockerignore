@@ -1,0 +1,14 @@
+.git
+bin
+web/node_modules
+web/test-results
+web/playwright-report
+data
+*.kpr
+*.db*
+PLAN*.md
+INVESTIGACION*.md
+
+/dist/
+internal/web/dist
+internal/browser/recorder.js

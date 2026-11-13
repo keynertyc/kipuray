@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width"
+  /><title>Kipuray execution report</title
+  ><style>
+    body {
+      font: 15px system-ui;
+      max-width: 1000px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+      background: #f7f7f2;
+      color: #25352f;
+    }
+    article {
+      padding: 24px;
+      background: white;
+      border: 1px solid #ddd;
+      margin: 25px 0;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    td,
+    th {
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      padding: 12px 8px;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+    img {
+      max-width: 100%;
+    }
+    code {
+      overflow-wrap: anywhere;
+    }
+    small {
+      color: #65705e;
+    }
+    .problem {
+      color: #9b5429;
+    }
+    h1,
+    h2 {
+      font-weight: 500;
+    }
+  </style>
+  <h1>Kipuray · {{.Status}}</h1>
+  <p>Fixture-based frontend verification for the recorded scenario.</p>
+  {{range .Runs}}
+  <article>
+    <h2>{{.Status}}</h2>
+    <p><code>{{.Target}}</code></p>
+    <small>{{.DurationMS}} ms · {{.StartedAt}}</small>
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Result</th>
+          <th>Evidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Steps}}
+        <tr>
+          <td>{{.Label}}</td>
+          <td>{{.Status}}</td>
+          <td>{{.Detail}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    {{range .Problems}}
+    <p class="problem">{{.}}</p>
+    {{end}}{{if .Screenshot}}
+    <details>
+      <summary>Browser evidence</summary>
+      <img alt="Browser evidence" src="{{screenshot .Screenshot}}" />
+    </details>
+    {{end}}
+  </article>
+  {{end}}
+</html>
