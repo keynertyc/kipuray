@@ -18,6 +18,8 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - name: Enable Chromium user namespaces on the ephemeral runner
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - run: make build
       - run: make test check browser-test
       - run: npx playwright test

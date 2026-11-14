@@ -51,3 +51,14 @@ This version is intended for a developer or small trusted team using a single
 workspace owner. It does not provide organization roles, SSO, distributed storage,
 or remote execution of contributed code. Remove unneeded cases periodically to
 bound disk usage; deleting a case also removes its run history and sharing links.
+
+## Chromium on Linux workstations and CI
+
+Some Ubuntu releases restrict unprivileged user namespaces through AppArmor.
+If Chrome reports “No usable sandbox”, configure the distribution's browser
+AppArmor profile or user-namespace support with your administrator. Kipuray does
+not automatically disable Chrome's sandbox. The ephemeral GitHub Actions runner
+explicitly enables user namespaces before its browser integration tests. The
+sharing-only Docker server does not launch a browser and is unaffected.
+
+See [Chromium's AppArmor guidance](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md).
