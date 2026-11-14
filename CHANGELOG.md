@@ -12,6 +12,7 @@
   including through symbolic links and hard links.
 - Honor `doctor --chrome PATH` and `doctor --help`. Check standard Windows and
   per-user macOS browser installations, and use the discovered browser consistently.
+- Fix HTML report rendering with CRLF templates in Windows source builds.
 - Add regression coverage and run system tests on macOS and Windows as well as
   the existing Linux browser/UI checks and six-platform compilation.
 

@@ -29,3 +29,19 @@ func TestReports(t *testing.T) {
 		t.Fatal("missing evidence")
 	}
 }
+
+func TestHTMLReportSupportsWindowsLineEndings(t *testing.T) {
+	source := strings.ReplaceAll(reportTemplate, "\r\n", "\n")
+	report, err := parseHTMLReport(strings.ReplaceAll(source, "\n", "\r\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	err = report.Execute(&output, htmlEvidence{Status: "passed", Runs: []browser.Result{{Status: "passed", Target: "http://localhost:3000"}}})
+	if err != nil {
+		t.Fatalf("CRLF template cannot render: %v", err)
+	}
+	if !strings.Contains(output.String(), "http://localhost:3000") {
+		t.Fatal("missing run evidence")
+	}
+}

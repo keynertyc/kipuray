@@ -29,7 +29,11 @@ func writeHTML(w io.Writer, value any) error {
 	return htmlReport.Execute(w, data)
 }
 
-var htmlReport = template.Must(template.New("report").Funcs(template.FuncMap{"screenshot": func(b64 string) template.URL { return template.URL("data:image/png;base64," + b64) }}).Parse(reportTemplate))
+func parseHTMLReport(source string) (*template.Template, error) {
+	return template.New("report").Funcs(template.FuncMap{"screenshot": func(b64 string) template.URL { return template.URL("data:image/png;base64," + b64) }}).Parse(source)
+}
+
+var htmlReport = template.Must(parseHTMLReport(reportTemplate))
 
 //go:embed report.html
 var reportTemplate string
