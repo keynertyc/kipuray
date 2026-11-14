@@ -6,10 +6,3 @@ export function path(raw: string) {
     return raw;
   }
 }
-export function pretty(raw: string) {
-  try {
-    return JSON.stringify(JSON.parse(raw), null, 2);
-  } catch {
-    return raw;
-  }
-}

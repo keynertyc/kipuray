@@ -5,7 +5,7 @@
 - Wait for complete browser requests before evaluating functional expectations;
   check uncaught errors after the other expectations, regardless of their order.
   Slow fixtures now use the run deadline instead of a separate one-second drain.
-- Preserve integer precision in recorded JSON and request matching. Distinct
+- Preserve integer precision in recorded JSON, the network viewer, and request matching. Distinct
   large numeric IDs no longer collapse into the same fixture key. Re-record cases
   captured with 0.1.0 if their payloads contained affected large integers.
 - Prevent `run` and `compare` reports from overwriting their input `.kpr` file,

@@ -1,5 +1,32 @@
 import { test, expect } from "@playwright/test";
 
+test("network evidence preserves large integer IDs", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Checkout · null discount regression" })
+    .first()
+    .click();
+  await page.waitForURL((url) => url.searchParams.has("case"));
+  const id = new URL(page.url()).searchParams.get("case");
+  const response = await page.request.get("/api/cases/" + id);
+  const source = await response.json();
+  const original = source.fixtures[0].body;
+  try {
+    source.fixtures[0].body = '{"id":9007199254740993,"discount":null}';
+    expect(
+      (await page.request.put("/api/cases/" + id, { data: source })).ok(),
+    ).toBeTruthy();
+    await page.reload();
+    await page.locator(".network-item summary").first().click();
+    await expect(page.locator(".network-item pre").first()).toContainText(
+      "9007199254740993",
+    );
+  } finally {
+    source.fixtures[0].body = original;
+    await page.request.put("/api/cases/" + id, { data: source });
+  }
+});
+
 test("recorded demo opens offline, verifies the fix, and roundtrips a portable case", async ({
   page,
 }) => {

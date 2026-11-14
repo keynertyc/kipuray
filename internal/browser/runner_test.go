@@ -5,9 +5,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/chromedp/chromedp"
 	"github.com/keynertyc/kipuray/internal/casefile"
 )
 
@@ -39,6 +42,61 @@ func TestRunWaitsForSlowFixturesBeforeCheckingExpectations(t *testing.T) {
 	}
 	if len(result.Steps) != 2 || result.Steps[1].Status != "failed" {
 		t.Fatalf("no-errors did not observe delayed failure: %v", result.Steps)
+	}
+}
+
+func TestCaptureAndRunPreservePOSTPayloadNumbers(t *testing.T) {
+	if os.Getenv("KIPURAY_BROWSER_TEST") != "1" {
+		t.Skip("requires Chrome")
+	}
+	var apiCalls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api" {
+			apiCalls.Add(1)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"id":9007199254740993}`))
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte(`<!doctype html><button id="go">Load</button><pre id="result"></pre><script>document.querySelector('#go').addEventListener('click',()=>fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"id":9007199254740993}'}).then(r=>r.text()).then(text=>document.querySelector('#result').textContent=text))</script>`))
+	}))
+	defer server.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	defer cancel()
+	capture, err := StartCapture(ctx, server.URL, CaptureOptions{Options: Options{Headless: true}, CaptureJSON: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := chromedp.Do(capture.ctx, chromedp.Click(chromedp.CSS("#go"))); err != nil {
+		capture.Stop()
+		t.Fatal(err)
+	}
+	until := time.Now().Add(5 * time.Second)
+	seen := false
+	for !seen && time.Now().Before(until) {
+		seen, err = chromedp.Run(capture.ctx, chromedp.Evaluate[bool](`document.querySelector('#result').textContent.includes('9007199254740993')`))
+		if err != nil {
+			capture.Stop()
+			t.Fatal(err)
+		}
+		if !seen {
+			time.Sleep(20 * time.Millisecond)
+		}
+	}
+	c := capture.Stop()
+	if !seen || len(c.Fixtures) != 1 {
+		t.Fatalf("capture did not finish: observed=%v fixtures=%v", seen, c.Fixtures)
+	}
+	if !strings.Contains(c.Fixtures[0].RequestBody, "9007199254740993") || !strings.Contains(c.Fixtures[0].Body, "9007199254740993") {
+		t.Fatalf("POST payload changed: %+v", c.Fixtures[0])
+	}
+	c.Expectations = []casefile.Expectation{{Kind: "text", Selector: "#result", Value: "9007199254740993"}}
+	result := Run(ctx, c, server.URL, "", Options{Headless: true})
+	if result.Status != "passed" {
+		t.Fatalf("POST replay failed: status=%s steps=%v problems=%v", result.Status, result.Steps, result.Problems)
+	}
+	if apiCalls.Load() != 1 {
+		t.Fatalf("replay reached the live backend: %d calls", apiCalls.Load())
 	}
 }
 

@@ -35,6 +35,10 @@ func TestPrivacyPreservesJSONNumberPrecision(t *testing.T) {
 	if body, _ := ScrubJSON(`{"id":1} {"id":2}`); body != "" {
 		t.Fatal("accepted more than one JSON value")
 	}
+	unchanged := `{ "id": 9007199254740993, "items": [] }`
+	if got, changed := ScrubJSON(unchanged); changed || got != unchanged {
+		t.Fatalf("unredacted payload changed: %s", got)
+	}
 }
 
 func TestConcurrentRequestsStayNonExecutable(t *testing.T) {

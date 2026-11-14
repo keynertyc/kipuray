@@ -39,7 +39,10 @@ func ScrubJSON(body string) (string, bool) {
 		}
 	}
 	walk(v)
-	b, _ := json.Marshal(v)
+	if !changed {
+		return body, false
+	}
+	b, _ := json.MarshalIndent(v, "", "  ")
 	return string(b), changed
 }
 func safeURL(raw string) (string, bool) {

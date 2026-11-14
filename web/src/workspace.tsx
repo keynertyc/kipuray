@@ -1,6 +1,6 @@
 import { FixtureEditor } from "./fixture-editor";
 import { EvidenceView } from "./evidence";
-import { path, pretty } from "./format";
+import { path } from "./format";
 import { useEffect, useState } from "react";
 import {
   Check,
@@ -206,8 +206,7 @@ export function CaseWorkspace({
                     <ChevronDown size={13} />
                   </summary>
                   <pre>
-                    {pretty(f.body) ||
-                      "Payload omitted. Review it in Scenario & data."}
+                    {f.body || "Payload omitted. Review it in Scenario & data."}
                   </pre>
                   <small>
                     Occurrence {i + 1}
