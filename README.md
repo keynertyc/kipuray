@@ -10,11 +10,47 @@ corrected versions with the same conditions.
 A Go binary serves the complete interface. No cloud account, application SDK, or
 external database is needed for the supported local workflow.
 
+**Start here:** [Test your own application](docs/local-development.md) ·
+[Install](#install) · [Try the bundled demo](#try-the-bundled-demo) ·
+[Troubleshooting](docs/local-development.md#troubleshooting)
+
+## Record your application
+
+1. [Download the right binary](docs/local-development.md#1-install-the-right-binary)
+   for your OS/CPU and install Chrome/Chromium. Rename the executable to `kipuray`
+   (`kipuray.exe` on Windows).
+2. Start your own application and its test backend in one terminal. For v0.1,
+   use a local build/preview or a mode **without HMR WebSockets**.
+3. In another terminal, start Kipuray with your application's URL:
+
+   ```sh
+   ./kipuray dev http://127.0.0.1:4173/checkout --capture-json
+   ```
+
+4. Confirm **Application URL** and **Include JSON API payloads** using synthetic
+   data. Click **Open recording window**, reproduce the bug in that window,
+   then return to the workspace and click **Stop & review**.
+5. In **Scenario & data**, replace masked input values with test data, review the
+   API fixtures, add the correct **Expected result**, and click **Save case**.
+6. Open **Verify fix**. For one target, uncheck **Compare the previous and corrected
+   versions**, enter your app's URL, and click **Run scenario**. After changing your
+   code, rebuild/restart the app and run the same case again. To verify a correction
+   between two running versions, enable the comparison and set both URLs.
+
+Kipuray serves its workspace on port **4317**; your application keeps its own
+port. Keep both terminals open. No application SDK or Kipuray source checkout is
+required. Start with an authentication-independent test page: fresh browser profiles
+do not inherit your usual login or storage. Windows PowerShell users should use `.\kipuray.exe` instead of `./kipuray`.
+
+**[Follow the complete local-development walkthrough](docs/local-development.md)**
+for OS/CPU selection, an existing Vite app example, selectors/expectations,
+before/after setup, response variants, portable files, and troubleshooting.
+
 ![A recorded checkout bug in the Kipuray workspace](docs/images/workspace.png)
 
 [Watch the recorded browser walkthrough](docs/images/demo.webm).
 
-## Try it
+## Install
 
 Download the binary for your operating system and architecture from
 [Releases](https://github.com/keynertyc/kipuray/releases/latest), rename it to
@@ -26,8 +62,25 @@ chmod +x kipuray
 ./kipuray demo
 ```
 
-On Windows, run `kipuray.exe demo`. Chrome/Chromium is needed for recording and
+On Windows PowerShell, run `.\kipuray.exe demo`. Chrome/Chromium is needed for recording and
 execution. The release includes SHA-256 checksums and license notices.
+
+Choose `darwin_arm64` for an Apple Silicon Mac and `darwin_amd64` for an Intel Mac.
+The [installation table](docs/local-development.md#1-install-the-right-binary)
+covers Linux and Windows as well.
+
+### Try the bundled demo
+
+After `./kipuray demo` starts, open the workspace at `http://127.0.0.1:4317` if it
+does not open automatically. The generated checkout case is already recorded:
+
+1. Open **Recording** to inspect the browser evidence.
+2. Open **Scenario & data** to inspect the action, API fixture, and expected result.
+3. Open **Verify fix** and click **Verify fix** with the supplied URLs.
+
+The previous checkout on port **3000** should fail, the corrected checkout on
+**3001** should pass, and the comparison should show **Verified**. Stop the demo
+with **Ctrl+C** before using those ports for your own application.
 
 ### Build from source
 
@@ -78,20 +131,7 @@ action produces an incomplete result.
 
 ![Before and after verification with browser evidence](docs/images/verification.png)
 
-## Record your application
-
-Start the application using its usual development command, then:
-
-```sh
-./bin/kipuray dev http://127.0.0.1:3000
-```
-
-1. Open the recording setup and confirm your local URL.
-2. If appropriate, enable JSON payload capture using **synthetic test data**.
-3. Reproduce the bug in the dedicated Chrome window. Stop and review the case.
-4. In **Scenario & data**, replace masked values with test values, review the
-   fixtures, and add a functional expectation such as text or element visibility.
-5. Save the case. Run it locally, compare two versions, or export a `.kpr` file.
+## Capture and test data
 
 Inputs are masked by default. Passwords, cookies, and authorization headers are
 not exported. An input explicitly marked `data-kipuray-public` may contribute its
@@ -116,11 +156,11 @@ kipuray compare checkout.kpr \
 HTML reports. The target applications must already be running. Imported cases
 never start shell commands or applications.
 
-| Exit code | Meaning |
-|---|---|
-| `0` | Scenario passed, or comparison verified the fix |
-| `1` | Expectation failed, regression, still failing, or original bug not reproduced |
-| `2` | Incomplete scenario, invalid input, or operational error |
+| Exit code | Meaning                                                                       |
+| --------- | ----------------------------------------------------------------------------- |
+| `0`       | Scenario passed, or comparison verified the fix                               |
+| `1`       | Expectation failed, regression, still failing, or original bug not reproduced |
+| `2`       | Incomplete scenario, invalid input, or operational error                      |
 
 A single passing execution is labeled **passed**. A comparison is **verified**
 only when the previous version fails and the corrected version passes. If both
@@ -190,7 +230,7 @@ issues with a minimal synthetic case and your browser/OS versions.
 ## Name and license
 
 The Peruvian Ministry of Education's Southern Quechua vocabulary records
-*kipuray/khipuray* as “registrar datos” (record data).
+_kipuray/khipuray_ as “registrar datos” (record data).
 [Source](https://repositorio.minedu.gob.pe/handle/20.500.12799/7490).
 
 Kipuray is licensed under [Apache-2.0](LICENSE). The project builds on rrweb,
