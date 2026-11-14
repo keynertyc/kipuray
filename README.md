@@ -16,6 +16,21 @@ external database is needed for the supported local workflow.
 
 ## Try it
 
+Download the binary for your operating system and architecture from
+[Releases](https://github.com/keynertyc/kipuray/releases/latest), rename it to
+`kipuray` (`kipuray.exe` on Windows), and run:
+
+```sh
+# macOS / Linux: make the downloaded file executable first.
+chmod +x kipuray
+./kipuray demo
+```
+
+On Windows, run `kipuray.exe demo`. Chrome/Chromium is needed for recording and
+execution. The release includes SHA-256 checksums and license notices.
+
+### Build from source
+
 Requirements for a source build: **Go 1.27.4+, Node.js 22.12+ or 24+, npm, and
 Chrome/Chromium**. Node and Go are build tools; users of a compiled binary only
 need the browser for recording and execution.
