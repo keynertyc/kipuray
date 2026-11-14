@@ -62,7 +62,6 @@ type fixtureQueue struct {
 	mu       sync.Mutex
 	items    map[string][]casefile.Fixture
 	problems []string
-	pending  int
 }
 
 func (q *fixtureQueue) problem(s string) {
@@ -78,10 +77,6 @@ func requestBody(r *network.Request) string {
 	return out.String()
 }
 func (q *fixtureQueue) intercept(ctx context.Context, e *fetch.EventRequestPaused, targetOrigin, originalOrigin string) {
-	q.mu.Lock()
-	q.pending++
-	q.mu.Unlock()
-	defer func() { q.mu.Lock(); q.pending--; q.mu.Unlock() }()
 	reqURL, _ := url.Parse(e.Request.URL)
 	origin := reqURL.Scheme + "://" + reqURL.Host
 	abort := func() {
@@ -199,20 +194,35 @@ func Run(parent context.Context, c *casefile.Case, target, variantID string, o O
 	}
 	var errorsMu sync.Mutex
 	errorCount := 0
-	chromedp.Listen(ctx, func(ev any) {
+	activity := newNetworkActivity()
+	err = chromedp.Listen(ctx, func(ev any) {
 		switch e := ev.(type) {
+		case *network.EventRequestWillBeSent:
+			activity.start(e.RequestID)
+		case *network.EventLoadingFinished:
+			activity.finish(e.RequestID)
+		case *network.EventLoadingFailed:
+			activity.finish(e.RequestID)
 		case *cdpruntime.EventBindingCalled:
 			if e.Name == "__kipurayUnsupported" {
 				q.problem(safeMessage(e.Payload))
 			}
 		case *fetch.EventRequestPaused:
-			go q.intercept(ctx, e, targetOrigin, originalOrigin)
+			// Register synchronously so a not-yet-scheduled worker cannot make
+			// the browser look idle. Protocol calls stay outside this listener.
+			activity.interceptStart()
+			go func() { defer activity.interceptFinish(); q.intercept(ctx, e, targetOrigin, originalOrigin) }()
 		case *cdpruntime.EventExceptionThrown:
 			errorsMu.Lock()
 			errorCount++
 			errorsMu.Unlock()
+			activity.touch()
 		}
 	})
+	if err != nil {
+		r.Problems = append(r.Problems, "Could not observe browser events: "+err.Error())
+		return finish()
+	}
 	err = chromedp.Do(ctx,
 		command(cdpruntime.AddBinding, cdpruntime.AddBindingParams{Name: "__kipurayUnsupported"}),
 		command(page.AddScriptToEvaluateOnNewDocument, page.AddScriptToEvaluateOnNewDocumentParams{Source: unsupportedAPIs}),
@@ -229,66 +239,49 @@ func Run(parent context.Context, c *casefile.Case, target, variantID string, o O
 		}
 		r.Steps = append(r.Steps, Step{fmt.Sprintf("%d. %s %s", i+1, a.Kind, a.Selector), "passed", ""})
 	}
-	r.Status = "passed"
-	for _, e := range c.Expectations {
-		ok := false
-		detail := ""
-		until := time.Now().Add(3 * time.Second)
-		for {
-			var evalErr error
-			if e.Kind == "no-errors" {
-				errorsMu.Lock()
-				ok = errorCount == 0
-				errorsMu.Unlock()
-			} else {
-				ok, evalErr = evaluateExpectation(ctx, e)
-			}
-			if evalErr != nil {
-				r.Status = "incomplete"
-				detail = evalErr.Error()
-				break
-			}
-			if ok || time.Now().After(until) {
-				break
-			}
-			select {
-			case <-time.After(50 * time.Millisecond):
-			case <-ctx.Done():
-				detail = ctx.Err().Error()
-				r.Status = "incomplete"
-			}
-			if detail != "" {
-				break
-			}
-		}
-		status := "passed"
-		if !ok {
-			status = "failed"
-			if r.Status != "incomplete" {
-				r.Status = "failed"
-			}
-			if detail == "" {
-				detail = "Expected condition was not satisfied"
-			}
-		}
-		r.Steps = append(r.Steps, Step{e.Kind + " " + e.Selector + " " + e.Value, status, detail})
+	if err := activity.settle(ctx); err != nil {
+		r.Problems = append(r.Problems, "Network did not settle before checking expectations: "+err.Error())
+		return finish()
 	}
-	// Drain intercepted requests so a missing fixture cannot produce a false pass.
-	until := time.Now().Add(time.Second)
-	for time.Now().Before(until) {
-		time.Sleep(50 * time.Millisecond)
-		q.mu.Lock()
-		pending := q.pending
-		q.mu.Unlock()
-		if pending == 0 {
-			break
+	checks := make([]Step, len(c.Expectations))
+	for i, e := range c.Expectations {
+		if e.Kind != "no-errors" {
+			checks[i] = checkExpectation(ctx, e)
 		}
+	}
+	// Functional checks may wait for asynchronous UI updates. Evaluate no-errors
+	// last, regardless of its position in the case, after those updates settle.
+	settleErr := activity.settle(ctx)
+	errorsMu.Lock()
+	observedErrors := errorCount
+	errorsMu.Unlock()
+	for i, e := range c.Expectations {
+		if e.Kind == "no-errors" {
+			checks[i] = Step{Label: "no-errors", Status: "passed"}
+			if observedErrors > 0 {
+				checks[i].Status = "failed"
+				checks[i].Detail = fmt.Sprintf("Observed %d uncaught browser error(s)", observedErrors)
+			}
+			if settleErr != nil {
+				checks[i].Status = "incomplete"
+				checks[i].Detail = settleErr.Error()
+			}
+		}
+	}
+	r.Status = "passed"
+	for _, check := range checks {
+		if check.Status == "incomplete" {
+			r.Status = "incomplete"
+		} else if check.Status == "failed" && r.Status != "incomplete" {
+			r.Status = "failed"
+		}
+	}
+	r.Steps = append(r.Steps, checks...)
+	if settleErr != nil {
+		r.Problems = append(r.Problems, "Network did not settle after checking expectations: "+settleErr.Error())
 	}
 	q.mu.Lock()
 	r.Problems = append(r.Problems, q.problems...)
-	if q.pending > 0 {
-		r.Problems = append(r.Problems, "Requests still pending")
-	}
 	for _, remaining := range q.items {
 		if len(remaining) > 0 {
 			r.Problems = append(r.Problems, "Recorded API requests were not consumed")

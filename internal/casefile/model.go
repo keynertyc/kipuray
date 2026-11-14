@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"strings"
 	"time"
@@ -193,7 +194,9 @@ func RequestKey(method, rawURL, body string) (string, error) {
 	}
 	u.RawQuery = u.Query().Encode()
 	var value any
-	if json.Unmarshal([]byte(body), &value) == nil {
+	decoder := json.NewDecoder(strings.NewReader(body))
+	decoder.UseNumber()
+	if decoder.Decode(&value) == nil && decoder.Decode(new(any)) == io.EOF {
 		normalized, _ := json.Marshal(value)
 		body = string(normalized)
 	}

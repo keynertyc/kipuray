@@ -11,18 +11,18 @@ Imported cases receive a new workspace identity.
 
 The case document contains:
 
-| Field | Content |
-|---|---|
-| `id`, `version`, `createdAt`, `title` | Case identity and metadata |
-| `origin`, `width`, `height` | Original URL and viewport |
-| `events` | rrweb snapshots and mutations for visual playback |
-| `actions` | `click`, `input`, `select`, or `navigate` steps |
-| `fixtures` | Method, URL, request body, status, JSON body, content type, delay |
-| `expectations` | `text`, `visible`, `url`, or `no-errors` checks |
-| `variants` | One replacement fixture per named variant |
-| `diagnostics`, `warnings` | Evidence and explicit recording limitations |
-| `executionProblems` | Unsupported or ambiguous capture conditions |
-| `recordingState`, `truncated` | Whether a capture completed within its limits |
+| Field                                 | Content                                                           |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| `id`, `version`, `createdAt`, `title` | Case identity and metadata                                        |
+| `origin`, `width`, `height`           | Original URL and viewport                                         |
+| `events`                              | rrweb snapshots and mutations for visual playback                 |
+| `actions`                             | `click`, `input`, `select`, or `navigate` steps                   |
+| `fixtures`                            | Method, URL, request body, status, JSON body, content type, delay |
+| `expectations`                        | `text`, `visible`, `url`, or `no-errors` checks                   |
+| `variants`                            | One replacement fixture per named variant                         |
+| `diagnostics`, `warnings`             | Evidence and explicit recording limitations                       |
+| `executionProblems`                   | Unsupported or ambiguous capture conditions                       |
+| `recordingState`, `truncated`         | Whether a capture completed within its limits                     |
 
 Input actions and fixtures can carry a `redacted` flag. A redacted value must be
 replaced with synthetic data and reviewed before execution. At least one functional
@@ -32,6 +32,10 @@ The frontend origin can be explicitly remapped to a local target. Other API orig
 retain their original identity and are still fulfilled through fixtures. Request
 matching canonicalizes query ordering and valid JSON bodies; repeated matches are
 consumed in order. An unused or unexpected request makes the scenario incomplete.
+
+JSON object keys and whitespace are normalized without converting numbers to
+floating point. Numeric text is retained so large integer identifiers remain
+distinct and recorded responses do not lose precision.
 
 There are no application binaries, cookies, browser profiles, shell scripts, or
 databases in the container. Visual playback can work without the original app;

@@ -27,6 +27,16 @@ func TestPrivacy(t *testing.T) {
 	}
 }
 
+func TestPrivacyPreservesJSONNumberPrecision(t *testing.T) {
+	body, redacted := ScrubJSON(`{"id":9007199254740993,"token":"sensitive"}`)
+	if !redacted || !strings.Contains(body, "9007199254740993") || strings.Contains(body, "sensitive") {
+		t.Fatalf("unexpected redacted payload: %s", body)
+	}
+	if body, _ := ScrubJSON(`{"id":1} {"id":2}`); body != "" {
+		t.Fatal("accepted more than one JSON value")
+	}
+}
+
 func TestConcurrentRequestsStayNonExecutable(t *testing.T) {
 	if os.Getenv("KIPURAY_BROWSER_TEST") != "1" {
 		t.Skip("requires Chrome")

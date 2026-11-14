@@ -26,11 +26,11 @@ Select the operating system **and** processor architecture:
 On macOS or Linux, `uname -m` helps identify the architecture: `arm64`/`aarch64`
 correspond to `arm64`; `x86_64` corresponds to `amd64`.
 
-For example, after downloading v0.1.0 on an Apple Silicon Mac:
+For example, after downloading v0.1.1 on an Apple Silicon Mac:
 
 ```sh
 cd ~/Downloads
-mv kipuray_v0.1.0_darwin_arm64 kipuray
+mv kipuray_v0.1.1_darwin_arm64 kipuray
 chmod +x ./kipuray
 ./kipuray version
 ./kipuray doctor

@@ -59,17 +59,7 @@ Run/compare exit codes: 0 passed/verified, 1 failed/not reproduced, 2 incomplete
 		fmt.Fprintln(out, version)
 		return 0, nil
 	case "doctor":
-		path := browser.ChromePath()
-		if path == "" {
-			return 2, errors.New("Chrome/Chromium not found; install it or pass --chrome")
-		}
-		cmd := exec.CommandContext(ctx, path, "--version")
-		b, err := cmd.CombinedOutput()
-		if err != nil {
-			return 2, err
-		}
-		fmt.Fprintf(out, "Browser: %s\n%s", path, b)
-		return 0, nil
+		return doctor(ctx, args[1:], out)
 	case "run", "compare":
 		return runCase(ctx, args[0], args[1:], out)
 	case "serve", "dev", "open", "demo":
@@ -129,6 +119,10 @@ func runCase(ctx context.Context, command string, args []string, out io.Writer) 
 	}
 	file, err := os.Open(f.Arg(0))
 	if err != nil {
+		return 2, err
+	}
+	if err := checkReportOutput(file, *output); err != nil {
+		file.Close()
 		return 2, err
 	}
 	c, err := casefile.Read(file)

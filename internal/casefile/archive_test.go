@@ -47,6 +47,14 @@ func TestRequestIdentity(t *testing.T) {
 		t.Fatalf("equivalent request keys differ: %q, %q", a, b)
 	}
 }
+
+func TestRequestIdentityPreservesLargeIntegers(t *testing.T) {
+	a, _ := RequestKey("POST", "http://localhost:3000/api", `{"id":9007199254740992}`)
+	b, _ := RequestKey("POST", "http://localhost:3000/api", `{"id":9007199254740993}`)
+	if a == b {
+		t.Fatal("distinct large integer IDs matched the same fixture")
+	}
+}
 func TestRequireFunctionalExpectation(t *testing.T) {
 	c := New("http://localhost:3000")
 	c.Expectations = []Expectation{{Kind: "no-errors"}}

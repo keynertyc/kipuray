@@ -52,6 +52,12 @@ An action failure is an incomplete execution. An unsatisfied functional
 expectation is a failed run. A successful run means the recorded scenario's
 expectations passed; it is not evidence about all application behavior.
 
+The runner waits for HTTP requests and fixture fulfillment to finish, followed by
+a 200 ms quiet period, before evaluating expectations. It observes the network
+again after functional checks and evaluates `no-errors` last. These waits use the
+overall 90-second run deadline, including configured response delays. They do not
+control arbitrary future timers or guarantee deterministic JavaScript scheduling.
+
 The before/after comparison uses the same case and variant sequentially. It
 reports a verified correction only for a failed expectation followed by a pass.
 

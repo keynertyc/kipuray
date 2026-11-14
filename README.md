@@ -106,6 +106,7 @@ than calling `.toFixed()` on it. The demo does not make purchases or contact an
 external API.
 
 For a browser installed outside standard locations, add `--chrome /path/to/chrome`.
+You can check that exact executable with `kipuray doctor --chrome /path/to/chrome`.
 Use `--no-open` on any workspace command to print the URL without opening it.
 
 Source builds are available now. The [release workflow](.github/workflows/release.yml)
@@ -224,7 +225,8 @@ Build assets before Go tests on a fresh checkout. After frontend edits, run
 while developing, for example `./bin/kipuray demo --data-dir /tmp/kipuray-dev`.
 
 Read [the architecture](docs/architecture.md), [the portable format](docs/case-format.md),
-and [AGENTS.md](AGENTS.md) for the module boundaries and checks. Report compatibility
+and [AGENTS.md](AGENTS.md) for the module boundaries and checks.
+See [the changelog](CHANGELOG.md) for fixes in each release. Report compatibility
 issues with a minimal synthetic case and your browser/OS versions.
 
 ## Name and license

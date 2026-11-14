@@ -2,6 +2,7 @@ package browser
 
 import (
 	"encoding/json"
+	"io"
 	"net/url"
 	"regexp"
 	"strings"
@@ -13,7 +14,9 @@ var sensitive = regexp.MustCompile(`(?i)(password|passwd|secret|token|authorizat
 // not an automatic guarantee of anonymization; test payloads still need review.
 func ScrubJSON(body string) (string, bool) {
 	var v any
-	if json.Unmarshal([]byte(body), &v) != nil {
+	decoder := json.NewDecoder(strings.NewReader(body))
+	decoder.UseNumber()
+	if decoder.Decode(&v) != nil || decoder.Decode(new(any)) != io.EOF {
 		return "", true
 	}
 	changed := false
